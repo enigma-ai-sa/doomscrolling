@@ -15,6 +15,7 @@ PROMPT = "Make the person(s) in the video take a step back and pull out the enig
 
 @app.route("/generate-video", methods=["POST"])
 def generate_video():
+    print("endpoint hit")
     try:
         # initialize google veo
         client = genai.Client(
