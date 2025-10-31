@@ -67,7 +67,7 @@
       formData.append('image', imageFile);
 
       try {
-        const res = await fetch('https://doomscrolling.onrender.com/generate-video', {
+        const res = await fetch('http://localhost:5000/generate-video', {
           method: 'POST',
           body: formData
         });
