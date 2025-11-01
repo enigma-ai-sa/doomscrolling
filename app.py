@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 import time
 from google import genai
 from google.genai import types
@@ -12,7 +12,11 @@ load_dotenv()
 app = Flask(__name__)
 CORS(app) 
 
-PROMPT = "Make the person(s) perform a backflip and then pull out the enigma logo from behind their backs."
+@app.route("/")
+def index():
+    return send_from_directory('frontend', 'index.html')
+
+PROMPT = "Make the person(s) spin around once smoothly, then pull out the enigma logo from behind their back."
 
 @app.route("/generate-video", methods=["POST"])
 def generate_video():
@@ -30,7 +34,7 @@ def generate_video():
         uploaded_bytes = base64.b64encode(uploaded_file.read()).decode("utf-8")
 
         uploaded_reference = types.VideoGenerationReferenceImage(
-            image={"imageBytes": uploaded_bytes, "mimeType": "image/png"},
+            image={"imageBytes": uploaded_bytes, "mimeType": "image/jpeg"},
             reference_type="asset",
         )
 
@@ -50,11 +54,15 @@ def generate_video():
             model="veo-3.1-generate-preview",
             prompt=PROMPT,
             config=types.GenerateVideosConfig(
-                negative_prompt="low quality, distorted, unrealistic",
-                aspect_ratio="16:9",
+                negative_prompt="low quality, distorted, unrealistic, deformed body, distorted limbs, unnatural movement, body disfigurement, inverted anatomy, warped perspective",
                 reference_images=[uploaded_reference, root_reference],
+                resolution="720p"
             ),
         )
+
+
+
+        
 
         # --- 4️⃣ Poll operation until video is ready ---
         while not operation.done:
@@ -78,7 +86,9 @@ def generate_video():
         )
         # bucket name is from .env
         bucket_name = os.getenv("S3_BUCKET")
-        s3.upload_file(filename, bucket_name, s3Key)
+        s3.upload_file(filename, bucket_name, s3Key, ExtraArgs={
+            'ContentType': 'video/mp4',
+            'ContentDisposition': 'inline'})
 
         # --- 7️⃣ Delete local video file ---
         os.remove(filename)
