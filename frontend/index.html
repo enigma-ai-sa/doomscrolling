@@ -340,29 +340,29 @@
       const sendBtn = document.getElementById('sendBtn');
       
       sendBtn.disabled = true;
-      statusMessage.textContent = '⏳ Generating video... This may take 2-3 minutes...';
+      statusMessage.textContent = '⏳ Sending request...';
       
       const formData = new FormData();
       formData.append('image', capturedImage, 'photo.jpg');
       
       try {
-        const res = await fetch(`/generate-video`, {
+        // Fire and forget - don't wait for response
+        fetch('/generate-video', {
           method: 'POST',
           body: formData
+        }).catch(() => {
+          // Ignore timeout errors - backend will keep processing
         });
         
-        const data = await res.json();
+        // Immediately show success message
+        statusMessage.textContent = '✅ Video generation started! Check back in 2-3 minutes to see your video.';
         
-        if (res.ok) {
-          statusMessage.textContent = '✅ Video generated! Refreshing...';
-          setTimeout(() => {
-            closeModal();
-            loadVideos();
-          }, 1500);
-        } else {
-          statusMessage.textContent = '❌ Error: ' + data.error;
-          sendBtn.disabled = false;
-        }
+        setTimeout(() => {
+          closeModal();
+          // Optionally reload videos immediately (won't show new one yet, but refreshes the list)
+          loadVideos();
+        }, 3000);
+        
       } catch (err) {
         statusMessage.textContent = '❌ Error: ' + err.message;
         sendBtn.disabled = false;
